@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>우리 집 장보기</title>
+<!-- 손글씨 글꼴 (인터넷이 없으면 기본 글꼴로 보여요) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6efe0;
+    --paper: #fff6b8;
+    --paper-alt: #fff1a6;
+    --line: #e9dc8c;
+    --ink: #4a3b2a;
+    --ink-soft: #8a7559;
+    --accent: #d9822b;
+    --accent-dark: #b4651a;
+    --tape: rgba(230, 210, 170, 0.75);
+    --shadow: 0 6px 14px rgba(110, 85, 40, 0.18);
+    --hand: "Gaegu", "Nanum Pen Script", "Comic Sans MS", cursive;
+    --body: "Gowun Dodum", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    background-image: radial-gradient(rgba(150, 120, 70, 0.08) 1px, transparent 1px);
+    background-size: 18px 18px;
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 16px;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 28px 16px 60px; }
+
+  header { text-align: center; margin-bottom: 18px; }
+  h1 { font-family: var(--hand); font-size: 46px; margin: 0; letter-spacing: 1px; }
+  .date { font-family: var(--hand); font-size: 22px; color: var(--ink-soft); }
+
+  /* 진행률 */
+  .progress {
+    background: #fffdf4; border-radius: 6px; box-shadow: var(--shadow);
+    padding: 14px 18px; margin: 0 auto 18px; max-width: 520px;
+  }
+  .progress-text { font-family: var(--hand); font-size: 24px; margin-bottom: 8px; text-align: center; }
+  .progress-text b { color: var(--accent-dark); }
+  .bar { height: 14px; background: #efe5c8; border-radius: 99px; overflow: hidden; }
+  .bar-fill { height: 100%; width: 0; background: linear-gradient(90deg, #f0b35a, var(--accent)); border-radius: 99px; transition: width .3s; }
+
+  /* 추가 칸 */
+  .add {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    background: #fffdf4; border-radius: 6px; box-shadow: var(--shadow);
+    padding: 14px; margin-bottom: 28px;
+  }
+  .add input, .add select, .add button {
+    font-family: var(--body); font-size: 16px; color: var(--ink);
+    border: 2px solid #e4d6b0; border-radius: 8px; padding: 10px 12px; background: #fff;
+  }
+  .add input:focus, .add select:focus { outline: none; border-color: var(--accent); }
+  #nameInput { flex: 3 1 180px; min-width: 0; }
+  #qtyInput { flex: 1 1 90px; min-width: 0; }
+  #catSelect { flex: 1 1 140px; min-width: 0; }
+  .add .btn {
+    background: var(--accent); color: #fff !important; border-color: var(--accent) !important;
+    font-weight: bold; cursor: pointer; flex: 0 0 auto;
+  }
+  .add .btn:hover { background: var(--accent-dark); }
+
+  /* 메모지 카드 */
+  .board { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 30px 22px; }
+  .note {
+    position: relative; background: var(--paper);
+    padding: 18px 16px 14px; box-shadow: var(--shadow); border-radius: 2px;
+    transform: rotate(var(--tilt, 0deg));
+  }
+  .note:nth-child(even) { background-color: var(--paper-alt); }
+  .note::before {
+    content: ""; position: absolute; top: -12px; left: 50%; width: 90px; height: 24px;
+    transform: translateX(-50%) rotate(-3deg); background: var(--tape);
+    box-shadow: 0 1px 2px rgba(0,0,0,.08);
+  }
+  .note h2 { font-family: var(--hand); font-size: 26px; white-space: nowrap; gap: 8px; margin: 0 0 6px; display: flex; justify-content: space-between; align-items: baseline; }
+  .note h2 .count { font-size: 18px; color: var(--ink-soft); font-weight: 400; }
+  .note ul { list-style: none; margin: 0; padding: 0; }
+  .empty { font-family: var(--hand); font-size: 19px; color: var(--ink-soft); line-height: 38px; }
+
+  .item { display: flex; align-items: center; gap: 10px; min-height: 38px; border-bottom: 1px solid var(--line); }
+  .item label { flex: 1; display: flex; align-items: center; gap: 10px; cursor: pointer; min-width: 0; }
+  .item input[type=checkbox] {
+    appearance: none; -webkit-appearance: none; flex: 0 0 22px; width: 22px; height: 22px; margin: 0;
+    border: 2px solid var(--ink-soft); border-radius: 5px; background: #fffdf4; cursor: pointer; position: relative;
+  }
+  .item input[type=checkbox]:checked { background: var(--accent); border-color: var(--accent); }
+  .item input[type=checkbox]:checked::after {
+    content: ""; position: absolute; left: 6px; top: 1px; width: 6px; height: 12px;
+    border: solid #fff; border-width: 0 3px 3px 0; transform: rotate(45deg);
+  }
+  .item input[type=checkbox]:focus-visible { outline: 2px solid var(--accent-dark); outline-offset: 2px; }
+  .name { font-size: 17px; overflow-wrap: anywhere; }
+  .qty { font-size: 13px; color: var(--ink-soft); margin-left: 4px; white-space: nowrap; }
+  .item.done .name { text-decoration: line-through; text-decoration-thickness: 2px; text-decoration-color: var(--accent-dark); color: var(--ink-soft); }
+  .item.done .qty { text-decoration: line-through; }
+  .del {
+    flex: 0 0 auto; border: none; background: none; color: var(--ink-soft); font-size: 20px; line-height: 1;
+    cursor: pointer; padding: 4px 6px; border-radius: 6px; opacity: .55;
+  }
+  .del:hover, .del:focus-visible { opacity: 1; color: #c0392b; background: rgba(192,57,43,.08); }
+
+  footer { text-align: center; margin-top: 36px; }
+  .reset {
+    font-family: var(--hand); font-size: 22px; padding: 8px 22px; cursor: pointer;
+    background: #fffdf4; color: var(--ink); border: 2px dashed var(--ink-soft); border-radius: 10px;
+  }
+  .reset:hover { border-color: var(--accent); color: var(--accent-dark); }
+  .hint { font-size: 13px; color: var(--ink-soft); margin-top: 10px; }
+
+  @media (max-width: 480px) {
+    h1 { font-size: 38px; }
+    .note { transform: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🛒 우리 집 장보기</h1>
+    <div class="date" id="today"></div>
+  </header>
+
+  <section class="progress" aria-live="polite">
+    <div class="progress-text" id="progressText"></div>
+    <div class="bar"><div class="bar-fill" id="barFill"></div></div>
+  </section>
+
+  <form class="add" id="addForm" autocomplete="off">
+    <input id="nameInput" type="text" placeholder="살 물건 (예: 콩나물)" aria-label="살 물건" required>
+    <input id="qtyInput" type="text" placeholder="수량 (예: 2개)" aria-label="수량">
+    <select id="catSelect" aria-label="종류"></select>
+    <button class="btn" type="submit">추가</button>
+  </form>
+
+  <main class="board" id="board"></main>
+
+  <footer>
+    <button class="reset" id="resetBtn" type="button">🔄 체크 모두 풀기</button>
+    <div class="hint">체크한 내용은 이 브라우저 안에만 저장돼요.</div>
+  </footer>
+</div>
+
+<script>
+(function () {
+  var STORAGE_KEY = "our-home-shopping-list-v1";
+
+  var CATEGORIES = [
+    { id: "veg",   name: "🥬 채소·과일",     tilt: "-1.2deg" },
+    { id: "meat",  name: "🥩 고기·생선",     tilt: "0.9deg" },
+    { id: "dairy", name: "🥛 유제품·계란",   tilt: "-0.6deg" },
+    { id: "grain", name: "🍚 곡물·가공식품", tilt: "1.1deg" },
+    { id: "home",  name: "🧻 생활용품",       tilt: "-0.9deg" }
+  ];
+
+  var DEFAULT_ITEMS = [
+    ["veg", "대파"], ["veg", "양파"], ["veg", "감자"], ["veg", "사과"],
+    ["meat", "돼지고기"], ["meat", "닭고기"],
+    ["dairy", "우유"], ["dairy", "계란"], ["dairy", "두부"],
+    ["grain", "쌀"], ["grain", "라면"],
+    ["home", "휴지"], ["home", "주방세제"]
+  ];
+
+  function makeId() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  }
+
+  function defaultItems() {
+    return DEFAULT_ITEMS.map(function (d) {
+      return { id: makeId(), cat: d[0], name: d[1], qty: "", done: false };
+    });
+  }
+
+  function load() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        var data = JSON.parse(raw);
+        if (Array.isArray(data)) return data;
+      }
+    } catch (e) { /* 저장소를 못 쓰면 기본 목록으로 */ }
+    return defaultItems();
+  }
+
+  function save() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); } catch (e) {}
+  }
+
+  var items = load();
+
+  var board = document.getElementById("board");
+  var catSelect = document.getElementById("catSelect");
+  var nameInput = document.getElementById("nameInput");
+  var qtyInput = document.getElementById("qtyInput");
+
+  // 오늘 날짜
+  var now = new Date();
+  var days = ["일", "월", "화", "수", "목", "금", "토"];
+  document.getElementById("today").textContent =
+    now.getFullYear() + "년 " + (now.getMonth() + 1) + "월 " + now.getDate() + "일 (" + days[now.getDay()] + ")";
+
+  // 종류 고르기 칸
+  CATEGORIES.forEach(function (c) {
+    var opt = document.createElement("option");
+    opt.value = c.id;
+    opt.textContent = c.name;
+    catSelect.appendChild(opt);
+  });
+
+  function render() {
+    board.innerHTML = "";
+    CATEGORIES.forEach(function (c) {
+      var list = items.filter(function (it) { return it.cat === c.id; });
+      var doneCount = list.filter(function (it) { return it.done; }).length;
+
+      var note = document.createElement("section");
+      note.className = "note";
+      note.style.setProperty("--tilt", c.tilt);
+
+      var h2 = document.createElement("h2");
+      h2.textContent = c.name;
+      var count = document.createElement("span");
+      count.className = "count";
+      count.textContent = list.length ? doneCount + "/" + list.length : "";
+      h2.appendChild(count);
+      note.appendChild(h2);
+
+      if (!list.length) {
+        var empty = document.createElement("div");
+        empty.className = "empty";
+        empty.textContent = "아직 살 게 없어요";
+        note.appendChild(empty);
+      } else {
+        var ul = document.createElement("ul");
+        list.forEach(function (it) { ul.appendChild(renderItem(it)); });
+        note.appendChild(ul);
+      }
+      board.appendChild(note);
+    });
+    updateProgress();
+  }
+
+  function renderItem(it) {
+    var li = document.createElement("li");
+    li.className = "item" + (it.done ? " done" : "");
+
+    var label = document.createElement("label");
+    var cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = it.done;
+    cb.addEventListener("change", function () {
+      it.done = cb.checked;
+      li.classList.toggle("done", it.done);
+      save();
+      render();
+    });
+    var name = document.createElement("span");
+    name.className = "name";
+    name.textContent = it.name;
+    label.appendChild(cb);
+    label.appendChild(name);
+    if (it.qty) {
+      var qty = document.createElement("span");
+      qty.className = "qty";
+      qty.textContent = it.qty;
+      name.appendChild(qty);
+    }
+
+    var del = document.createElement("button");
+    del.className = "del";
+    del.type = "button";
+    del.textContent = "×";
+    del.setAttribute("aria-label", it.name + " 지우기");
+    del.title = "지우기";
+    del.addEventListener("click", function () {
+      items = items.filter(function (x) { return x.id !== it.id; });
+      save();
+      render();
+    });
+
+    li.appendChild(label);
+    li.appendChild(del);
+    return li;
+  }
+
+  function updateProgress() {
+    var total = items.length;
+    var done = items.filter(function (it) { return it.done; }).length;
+    var text = document.getElementById("progressText");
+    if (!total) {
+      text.textContent = "목록이 비어 있어요. 살 물건을 추가해 보세요!";
+    } else if (done === total) {
+      text.innerHTML = "🎉 <b>" + total + "개</b> 다 샀어요!";
+    } else {
+      text.innerHTML = "<b>" + total + "개</b> 중 <b>" + done + "개</b> 샀어요";
+    }
+    document.getElementById("barFill").style.width = total ? (done / total * 100) + "%" : "0";
+  }
+
+  document.getElementById("addForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var name = nameInput.value.trim();
+    if (!name) { nameInput.focus(); return; }
+    items.push({ id: makeId(), cat: catSelect.value, name: name, qty: qtyInput.value.trim(), done: false });
+    save();
+    render();
+    nameInput.value = "";
+    qtyInput.value = "";
+    nameInput.focus();
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", function () {
+    if (!items.some(function (it) { return it.done; })) return;
+    if (confirm("모든 체크를 풀까요? (항목은 그대로 남아요)")) {
+      items.forEach(function (it) { it.done = false; });
+      save();
+      render();
+    }
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

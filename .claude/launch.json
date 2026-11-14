@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "shopping-list",
+      "runtimeExecutable": "powershell",
+      "runtimeArgs": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "C:\\Users\\2F96~1\\AppData\\Local\\Temp\\claude\\8d5b8be3fafb72f3\\6e2dc442-d80d-4949-9bf6-c6bceb3b9f36\\scratchpad\\serve.ps1"],
+      "port": 5179
+    }
+  ]
+}
